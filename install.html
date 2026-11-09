@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Money Meter" />
+  <meta name="robots" content="noindex" />
+  <title>Download Money Meter</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" href="icon-192.png" />
+  <style>
+    :root { --bg: #0b1220; --card: #131c2e; --text: #e8eefc; --muted: #93a3c4; --accent: #6366f1; --good: #22c55e; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 520px; margin: 0 auto; padding: calc(40px + env(safe-area-inset-top)) 20px 40px; text-align: center; }
+    .icon { width: 120px; height: 120px; border-radius: 28px; box-shadow: 0 12px 40px rgb(0 0 0 / 0.4); }
+    h1 { margin: 18px 0 6px; font-size: 28px; }
+    p { color: var(--muted); margin: 6px 0; }
+    .card { background: var(--card); border-radius: 22px; padding: 22px; margin-top: 26px; }
+    .q { font-size: 21px; font-weight: 700; color: var(--text); margin-bottom: 18px; }
+    .row { display: flex; gap: 12px; }
+    button, a.btn { flex: 1; border: 0; border-radius: 16px; padding: 16px; font: inherit; font-weight: 700; font-size: 18px; cursor: pointer; text-decoration: none; display: block; }
+    .yes { background: var(--accent); color: white; }
+    .no { background: #1f2a44; color: var(--text); }
+    .open { background: var(--good); color: #052e16; margin-top: 14px; }
+    .steps { text-align: left; margin: 0; padding-left: 0; list-style: none; }
+    .steps li { display: flex; gap: 14px; align-items: center; background: #1a2540; border-radius: 16px; padding: 14px; margin: 10px 0; font-size: 18px; color: var(--text); }
+    .steps b { font-size: 26px; width: 38px; text-align: center; }
+    .hidden { display: none; }
+    .arrow { position: fixed; z-index: 10; font-size: 64px; animation: bob 1s ease-in-out infinite; filter: drop-shadow(0 4px 12px rgb(99 102 241 / 0.7)); pointer-events: none; }
+    .arrow.top { top: 4px; right: 70px; } .arrow.bottom { bottom: 6px; left: 50%; margin-left: -32px; }
+    @keyframes bob { 50% { transform: translateY(var(--bob, -12px)); } }
+    .arrow.bottom { --bob: 12px; }
+    .done { font-size: 60px; }
+  </style>
+</head>
+<body>
+  <main>
+    <img class="icon" src="icon-512.png" alt="" />
+    <h1>Money Meter</h1>
+    <p>Playtime and money, with charts.</p>
+
+    <!-- 1. Are you sure? -->
+    <section id="ask" class="card">
+      <div class="q">Are you sure you want to download this app?</div>
+      <div class="row">
+        <button class="no" id="no">No</button>
+        <button class="yes" id="yes">Yes</button>
+      </div>
+    </section>
+
+    <!-- 2a. iPad / iPhone: Apple only lets YOU add it, from the Share button -->
+    <section id="apple" class="card hidden">
+      <div class="q">Two taps and it's on your Home Screen</div>
+      <ol class="steps">
+        <li><b>⬆️</b><span>Tap the <strong>Share</strong> button <span id="where">at the top</span> of Safari (the square with an arrow).</span></li>
+        <li><b>➕</b><span>Scroll down and tap <strong>Add to Home Screen</strong>, then <strong>Add</strong>.</span></li>
+      </ol>
+      <p>Then open <strong>Money Meter</strong> from your Home Screen.</p>
+    </section>
+    <div id="arrow" class="arrow hidden">⬆️</div>
+
+    <!-- 2b. Not in Safari on an iPad/iPhone -->
+    <section id="notSafari" class="card hidden">
+      <div class="q">Open this page in Safari</div>
+      <p>On an iPad or iPhone, only Safari can put apps on the Home Screen. Copy this link and open it in Safari:</p>
+      <p><strong>reality-realms.github.io/money-meter-app/install.html</strong></p>
+    </section>
+
+    <!-- 2c. Laptop / Android: real install button -->
+    <section id="other" class="card hidden">
+      <div class="q" id="otherQ">Installing…</div>
+      <p id="otherText"></p>
+    </section>
+
+    <!-- 3. Done -->
+    <section id="done" class="card hidden">
+      <div class="done">✅</div>
+      <div class="q">Money Meter is installed</div>
+      <a class="btn open" href="./">Open Money Meter</a>
+    </section>
+
+    <section id="bye" class="card hidden">
+      <div class="q">OK, nothing was downloaded.</div>
+      <a class="btn no" href="./">Use it in the browser instead</a>
+    </section>
+  </main>
+  <script>
+    const show = (id) => {
+      for (const s of document.querySelectorAll("section")) s.classList.add("hidden");
+      document.getElementById(id).classList.remove("hidden");
+    };
+    const ua = navigator.userAgent;
+    // iPadOS reports itself as a Mac, but with a touch screen.
+    const isIPad = /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+    const isIPhone = /iPhone|iPod/.test(ua);
+    const isApple = isIPad || isIPhone;
+    const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(ua);
+    const installed = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    let promptEvent = null;
+    addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      promptEvent = e;
+    });
+    addEventListener("appinstalled", () => show("done"));
+    // Opened from the Home Screen icon: go straight into the app.
+    if (installed) location.replace("./");
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
+
+    document.getElementById("no").onclick = () => show("bye");
+    document.getElementById("yes").onclick = async () => {
+      if (isApple) {
+        if (!isSafari) return show("notSafari");
+        show("apple");
+        // iPad Safari: Share is at the top right. iPhone Safari: at the bottom.
+        const arrow = document.getElementById("arrow");
+        arrow.classList.remove("hidden");
+        if (isIPhone) {
+          arrow.classList.add("bottom");
+          arrow.textContent = "⬇️";
+          document.getElementById("where").textContent = "at the bottom";
+        } else arrow.classList.add("top");
+        return;
+      }
+      show("other");
+      if (promptEvent) {
+        // Chrome / Edge / Android: the real "Install app" box.
+        promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
+        promptEvent = null;
+        if (choice.outcome === "accepted") return show("done");
+        document.getElementById("otherQ").textContent = "Not installed";
+        document.getElementById("otherText").innerHTML = 'You chose not to install it. <a href="./" style="color:#38bdf8">Use it in the browser</a> instead.';
+      } else {
+        document.getElementById("otherQ").textContent = "Install from the browser menu";
+        document.getElementById("otherText").innerHTML =
+          "In <b>Chrome</b> or <b>Edge</b>: click the install icon at the right of the address bar (or menu ⋮ → <b>Install Money Meter</b>). " +
+          "In <b>Safari on a Mac</b>: File → <b>Add to Dock</b>.";
+      }
+    };
+  </script>
+</body>
+</html>

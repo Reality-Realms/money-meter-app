@@ -1,8 +1,8 @@
 // Money Meter: keeps the app's own files on the device so it opens fast and
 // works offline (it then shows the last numbers it saw). GitHub data is never
 // cached here: the app always asks GitHub for the newest numbers.
-const VERSION = "money-meter-v1";
-const FILES = ["./", "index.html", "app.js", "view.mjs", "core.mjs", "style.css", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
+const VERSION = "money-meter-v2";
+const FILES = ["./", "index.html", "install.html", "app.js", "view.mjs", "core.mjs", "style.css", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {
     e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
